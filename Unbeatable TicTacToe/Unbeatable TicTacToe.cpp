@@ -1,13 +1,26 @@
-// TicTacToe.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+//Author: Jonathan Louis
+//Unbeatable AI for TicTacToe
+
 
 #include <iostream>
 #include <time.h>
+#include <vector>
 
 using namespace std;
 
+//global variables
 char board[3][3];
 int computerX, computerY;
+
+
+//structure to save simulated moves
+struct Move {
+	Move() {};
+	Move(int Score) : score(Score) {};
+	int x;
+	int y;
+	int score;
+};
 
 
 char winCheck();
@@ -15,7 +28,7 @@ void createBoard();
 void playerMove();
 void computerMove(int turn);
 void printBoard();
-int minimaxAlgorithm(int currentTurn);
+Move minimaxAlgorithm(int currentTurn);
 
 int main()
 {
@@ -23,10 +36,10 @@ int main()
 	bool playAgain = true;
 	char again = 'Y';
 
-
+	//loop to continue until player chooses to quit
 	while (playAgain) {
 		char winner = ' ';
-		int turn = 0;
+		int turn = 1;
 		cout << "Welcome to Tic Tac Toe.\n";
 		cout << "Player is 'X' and computer is 'O'\nPlayer goes first.\n\n";
 
@@ -71,11 +84,11 @@ int main()
 			cout << "Game is a draw.\n";
 		}
 
-		cout << "Would you like to play again(Y for yes or N for no)?\n";
+		cout << "Would you like to play again(Q to quit or Y to play again)?\n";
 
 		cin >> again;
 
-		if ((again == 'N') | (again == 'n')) {
+		if ((again == 'Q') | (again == 'q')) {
 			playAgain = false;
 		}
 	}
@@ -137,28 +150,31 @@ void playerMove() {
 	}
 }
 
-int minimaxAlgorithm(int currentTurn) {
-	int move[2] = { -1, -1 };
-	int score = -20;
+Move minimaxAlgorithm(int currentTurn) {
+	Move move;
+	
+	//vector to store the list of moves to find the best move
+	vector<Move> bestMoves;
 
-	//changing between computer and player symbols for the board
+	//changing between computer and player symbols for each simulated turn for the board
 	currentTurn = -currentTurn;
 
 	char currentMark;
 	char winner;
 
-	//base case for score
+	//base case for score, if player wins returns negative, computer wins is positive, and cat is 0
 	winner = winCheck();
 
 	if (winner == 'X') {
-		return -10;
+		return Move(-10);
 	}
 	else if (winner == 'O') {
-		return 10;
+		return Move(10);
 	}
 	else if ((winner == 'C')) {
-		return 0;
+		return Move(0);
 	}
+
 
 
 	//  1 = player
@@ -170,49 +186,59 @@ int minimaxAlgorithm(int currentTurn) {
 		currentMark = 'O';
 	}
 
+	//uptating the board and simulating the next move if a space is still available
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
 
 			if (board[i][j] == ' ') {
 				board[i][j] = currentMark;
 
-				int moveScore = minimaxAlgorithm(currentTurn);
+				move = minimaxAlgorithm(currentTurn);
 
-				//on computer turn looking for the heighest score
-				if (currentTurn == 1) {
-					if (moveScore > score) {
-						score = moveScore;
-						move[0] = i;
-						move[1] = j;
-					}
-				}
-				//on players simulated turn looking for the lowest score
-				else {
-					score = -score;
-					if (moveScore < score) {
-						score = moveScore;
-						move[0] = i;
-						move[1] = j;
-					}
-				}
+				move.x = i;
+				move.y = j;
+				
+				bestMoves.push_back(move);
 
+				//resetting changes to the board
 				board[i][j] = ' ';
 			}
-
-
-
 		}
 	}
 
 
-	if ((move[0] == -1) | (move[1] == -1)) {
-		return 0;
+	//variable to save best move in the iterations
+	int bestMove = 0;
+	
+	//on computer turn looking for the heighest score
+	if (currentTurn == -1) {
+
+		int bestScore = -20;
+		for (int i = 0; i < bestMoves.size(); i++) {
+
+			if (bestMoves.at(i).score > bestScore) {
+				bestScore = bestMoves.at(i).score;
+				bestMove = i;
+			}
+
+		}
 	}
+	//on players turn looking for the lowest score
 	else {
-		computerX = move[0];
-		computerY = move[1];
-		return -1;
+		int bestScore = 20;
+
+		for (int i = 0; i < bestMoves.size(); i++) {
+
+			if (bestMoves.at(i).score < bestScore) {
+				bestScore = bestMoves.at(i).score;
+				bestMove = i;
+			}
+
+		}
 	}
+	
+	return bestMoves.at(bestMove);
+
 }
 
 //computer move class
@@ -220,6 +246,7 @@ void computerMove(int turn) {
 
 	srand(time(0));
 
+	//random selection for corners, if player selects middle allows computer to not always take same corner
 	computerX = rand() % 3;
 	computerY = rand() % 3;
 
@@ -247,7 +274,11 @@ void computerMove(int turn) {
 	else {
 
 		//calling minimaxAlgorithm with computer taking first turn
-		minimaxAlgorithm(-1);
+		Move move;
+		move = minimaxAlgorithm(1);
+
+		computerX = move.x;
+		computerY = move.y;
 
 		board[computerX][computerY] = 'O';
 
@@ -286,7 +317,7 @@ char winCheck() {
 	}
 
 	//check for cat game 
-	// checks if all spaces have been occupied, if not play continues
+	//checks if all spaces have been occupied, if not play continues
 	int count = 0;
 	if (winner == ' ') {
 		for (int i = 0; i < 3; i++) {
