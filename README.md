@@ -9,6 +9,9 @@ computer would take the move that was rated the highest.
 
 
 
+![screenshot1](https://user-images.githubusercontent.com/49454087/66432176-73267f80-e9eb-11e9-982e-bd5159480367.PNG)
+
+
 
 Resources:
 Fox, Jason. “Tic Tac Toe: Understanding the Minimax Algorithm.” Never Stop Building, 13 Dec. 2013, https://www.neverstopbuilding.com/blog/minimax.
